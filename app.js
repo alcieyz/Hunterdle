@@ -182,6 +182,9 @@ function finish(won) {
   const share = document.createElement("button"); share.textContent = "Copy result";
   share.onclick = () => copyShare(share);
   b.appendChild(share);
+  if (mode === "daily" && won) {
+    document.dispatchEvent(new CustomEvent("hunterdle:solved", { detail: { day: todayNumber(), guesses: guesses.length } }));
+  }
   if (mode === "practice") {
     const again = document.createElement("button"); again.className = "alt"; again.textContent = "Another one";
     again.onclick = () => startGame("practice");
