@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hunterdle — Hunter x Hunter Guessing Game</title>
+  <meta name="description" content="Guess the Hunter x Hunter character. New puzzle every day.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <p class="eyebrow">Hunter Association · Licence Exam</p>
+    <h1>HUNTERDLE</h1>
+    <p id="subtitle">Identify today's character.</p>
+    <div class="modes">
+      <button id="mode-daily" class="active">Daily</button>
+      <button id="mode-practice">Practice (random)</button>
+      <button id="help-btn" aria-label="How to play">?</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="help" hidden>
+      <p><b>Green</b> = match. <b>Red</b> = no match. <b>↑ / ↓</b> = the answer is higher / lower (age range, first arc). No arrow means the value is unknown for one of the two characters. Guesses are unlimited.</p>
+      <p class="arcs">Arc order: Hunter Exam → Zoldyck Family → Heavens Arena → Yorknew City → Greed Island → Chimera Ant → Chairman Election</p>
+    </section>
+
+    <div id="search">
+      <input id="input" type="text" autocomplete="off" spellcheck="false" placeholder="Type a character name…" aria-label="Guess a character">
+      <ul id="suggestions" role="listbox"></ul>
+    </div>
+
+    <div id="banner" hidden></div>
+
+    <div class="scroll">
+      <div id="grid">
+        <div class="row head" id="head-row"></div>
+        <div id="rows"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>Fan-made, non-commercial. Hunter × Hunter © Yoshihiro Togashi / Shueisha. Data from Hunterpedia (2011 anime, eps 1–148).</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
