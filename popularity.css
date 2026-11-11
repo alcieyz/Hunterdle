@@ -41,3 +41,9 @@ main.pop-view > #popularity { display: block; }
 .rate-btns button.selected:hover:not(:disabled) { background: var(--gold, #d8b04a) !important; color: #1a1405 !important; border-color: var(--gold, #d8b04a) !important; }
 .rate-box .rate-submit { margin-top: .4rem; }
 .rate-box .rate-submit:disabled { opacity: .45; cursor: default; }
+
+/* locked state: nothing from the list is shown until today's puzzle is finished */
+#pop-locked { display: none; text-align: center; padding: 1.2rem 1rem; margin: .5rem 0;
+  background: var(--panel, #16241c); border: 1px solid var(--line, #2a3f33); border-radius: 10px; }
+#popularity.locked #pop-locked { display: block; }
+#popularity.locked .sub, #popularity.locked #pop-status, #popularity.locked #pop-list { display: none; }

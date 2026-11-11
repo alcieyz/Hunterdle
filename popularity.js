@@ -7,7 +7,7 @@
     return;
   }
   const $ = id => document.getElementById(id);
-  const PID_KEY = "hunterdle-pid", RATED_KEY = "hunterdle-rated";
+  const PID_KEY = "hunterdle-pid", RATED_KEY = "hunterdle-rated", UNLOCK_KEY = "hunterdle-popunlock";
   const IMG_DIR = (typeof IMAGE_DIR !== "undefined") ? IMAGE_DIR : "HxH_Wordle_Images/";
 
   const load = (k, fb = null) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch { return fb; } };
@@ -18,6 +18,15 @@
         return (c === "x" ? r : (r & 3) | 8).toString(16);
       }));
   const playerId = () => { let id = load(PID_KEY); if (!id) { id = uuid(); save(PID_KEY, id); } return id; };
+  const todayNumber = () => {
+    const d = new Date();
+    return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+  };
+  // the tab unlocks once today's daily puzzle is finished (solved or given up)
+  const isUnlocked = () => {
+    const rated = load(RATED_KEY);
+    return load(UNLOCK_KEY) === todayNumber() || !!(rated && rated.day === todayNumber());
+  };
   const headers = () => {
     const h = { apikey: cfg.key, "Content-Type": "application/json" };
     if (cfg.key.startsWith("eyJ")) h.Authorization = "Bearer " + cfg.key;
@@ -83,6 +92,8 @@
     }
   }
   function onFinish(e) {
+    save(UNLOCK_KEY, e.detail.day);
+    refreshLock();
     const banner = $("banner"), h = banner && banner.querySelector("h2");
     if (h) renderRating(banner, h.textContent, e.detail.day);
   }
@@ -100,6 +111,7 @@
   sec.innerHTML = '<button id="pop-back" type="button">← Back to game</button>' +
     "<h2>Character Popularity</h2>" +
     '<p class="sub">Average rating (1–10) from players who finished the daily puzzle.</p>' +
+    '<p id="pop-locked">🔒 Locked until you finish today\'s puzzle. Solve it or give up to unlock the popularity list.</p>' +
     '<div id="pop-status"></div><ol id="pop-list"></ol>';
   main.appendChild(sec);
 
@@ -111,8 +123,12 @@
     }
     main.classList.add("pop-view"); popBtn.classList.add("active");
     window.scrollTo(0, 0);
-    if (stale) loadList();
+    const open = isUnlocked();
+    sec.classList.toggle("locked", !open);
+    if (open && stale) loadList();
   }
+  function refreshLock() { popBtn.textContent = isUnlocked() ? "Popularity" : "Popularity 🔒"; }
+  refreshLock();
   function backToGame() {
     main.classList.remove("pop-view"); popBtn.classList.remove("active");
     prevActive.forEach(id => $(id).classList.add("active"));
