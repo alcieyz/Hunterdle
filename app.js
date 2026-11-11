@@ -178,6 +178,29 @@ function submitGuess(c) {
   updateHint();
 }
 
+// ---------- help: list of affiliations (built from characters.json, so it never goes stale) ----------
+function renderHelpLists() {
+  // order by first appearance in the show: earliest arc, then position in characters.json
+  const firstSeen = new Map();                       // affiliation -> [arc index, position in file]
+  ALL.forEach((c, i) => {
+    const aff = c.affiliation;
+    if (isUnknown(aff) || aff === "None") return;
+    const arc = ARC_ORDER.indexOf(c.first_arc), arcIdx = arc === -1 ? 999 : arc;
+    const cur = firstSeen.get(aff);
+    if (!cur || arcIdx < cur[0]) firstSeen.set(aff, [arcIdx, i]);
+  });
+  const affs = [...firstSeen.keys()].sort((x, y) => {
+    const p = firstSeen.get(x), q = firstSeen.get(y);
+    return p[0] - q[0] || p[1] - q[1];
+  });
+  if (ALL.some(c => c.affiliation === "None")) affs.push("None");
+  let p = $("help-affs");
+  if (!p) { p = document.createElement("p"); p.id = "help-affs"; p.className = "arcs"; $("help").appendChild(p); }
+  p.textContent = "";
+  const label = document.createElement("b"); label.textContent = "Affiliations: ";
+  p.append(label, affs.join(" · "));
+}
+
 // ---------- yesterday's character ----------
 function showYesterday() {
   let el = $("yesterday");
@@ -356,6 +379,7 @@ async function init() {
     return;
   }
   POOL = ALL.filter(c => COLUMNS.filter(col => !isUnknown(c[col.key])).length >= MIN_KNOWN_FIELDS);
+  renderHelpLists();
 
   $("input").addEventListener("input", updateSuggestions);
   $("input").addEventListener("keydown", e => {
