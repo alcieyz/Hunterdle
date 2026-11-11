@@ -1,6 +1,6 @@
 // ================= CONFIG =================
 const IMAGE_DIR = "HxH_Wordle_Images/";   // folder with your .webp files
-const MIN_KNOWN_FIELDS = 4;               // answer pool: characters with at least this many known fields (of 8)
+const MIN_KNOWN_FIELDS = 5;               // answer pool: characters with at least this many known fields (of 8)
 
 // Ordered lists used for the up/down arrows
 const AGE_ORDER = ["1-20", "21-40", "41-60", "61-80", "100+"];
