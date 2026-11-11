@@ -1,0 +1,22 @@
+/* Give-up button + blurred-image hint */
+#tools { display: flex; justify-content: center; gap: .5rem; margin: .2rem auto .8rem; flex-wrap: wrap; }
+#tools[hidden] { display: none; }
+#tools button {
+  font: 500 .85rem "Oswald", sans-serif; letter-spacing: .08em; text-transform: uppercase;
+  padding: .45rem .9rem; border-radius: 999px; cursor: pointer;
+  color: var(--fg, #efe9d6); background: transparent; border: 1px solid var(--line, #2a3f33);
+}
+#tools button:hover:not(:disabled) { border-color: var(--gold, #d8b04a); }
+#tools button:disabled { opacity: .45; cursor: default; }
+#hint-btn:not(:disabled) { border-color: var(--gold, #d8b04a); color: var(--gold, #d8b04a); }
+#giveup-btn:hover { border-color: #c0544d !important; color: #e07a72; }
+
+#hint-panel { text-align: center; margin: 0 auto .9rem; }
+.hint-img {
+  width: 180px; height: 180px; margin: 0 auto .4rem; overflow: hidden;
+  border-radius: 12px; border: 1px solid var(--gold, #d8b04a); background: #22372b;
+}
+.hint-img img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.2); transition: filter .6s ease; pointer-events: none; user-select: none; }
+#hint-note { margin: 0; color: var(--muted, #9bb0a2); font-size: .85rem; }
+
+.row.answer-row .cell.who span::after { content: " (answer)"; color: var(--gold, #d8b04a); }

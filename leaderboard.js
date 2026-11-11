@@ -46,7 +46,7 @@
     </dialog>
     <dialog id="lb-dialog">
       <h2>Today's Leaderboard</h2>
-      <p>Fewest guesses wins. Ties are ordered by who solved first.</p>
+      <p>Fewest guesses wins. Ties go to whoever solved first. Players who gave up are listed at the bottom.</p>
       <div id="lb-status"></div>
       <ol id="lb-list"></ol>
       <div id="lb-foot">
@@ -79,7 +79,7 @@
     save(NAME_KEY, name);
     nameDlg.close();
     $("lb-me").textContent = name;
-    if (pending) submit(pending.day, pending.guesses);
+    if (pending) submit(pending.day, pending.guesses, pending.gaveUp);
   });
 
   // ---------- leaderboard ----------
@@ -97,23 +97,33 @@
     $("lb-status").textContent = "Loading…";
     if (!lbDlg.open) lbDlg.showModal();
     try {
-      const url = `${SUPABASE_URL}/rest/v1/scores?select=name,guesses&day=eq.${day}` +
-                  `&order=guesses.asc,created_at.asc&limit=${TOP_N}`;
+      const url = `${SUPABASE_URL}/rest/v1/scores?select=name,guesses,gave_up&day=eq.${day}` +
+                  `&order=gave_up.asc,guesses.asc,created_at.asc&limit=${TOP_N}`;
       const res = await fetch(url, { headers: headers() });
       if (!res.ok) throw new Error("HTTP " + res.status);
       const rows = await res.json();
       if (token !== lbToken) return;              // a newer open superseded this one
       $("lb-status").textContent = rows.length ? "" : "No scores yet today — be the first!";
       const mine = load(SUBMITTED_KEY);
-      let rank = 0;
-      const items = rows.map((r, i) => {
-        if (i === 0 || r.guesses !== rows[i - 1].guesses) rank = i + 1;
+      let place = 0, rank = 0, prevScore = null;
+      const items = rows.map(r => {
         const li = document.createElement("li");
-        if (mine && mine.day === day && r.name === getName() && r.guesses === mine.guesses) li.className = "me";
+        const isMine = mine && mine.day === day && r.name === getName() &&
+                       !!r.gave_up === !!mine.gaveUp && (r.gave_up || r.guesses === mine.guesses);
+        li.className = (isMine ? "me " : "") + (r.gave_up ? "gaveup" : "");
         const rk = document.createElement("span"); rk.className = "rank";
-        rk.textContent = ["🥇", "🥈", "🥉"][rank - 1] || rank;
+        const sc = document.createElement("span"); sc.className = "sc";
+        if (r.gave_up) {
+          rk.textContent = "—";
+          sc.textContent = "Gave up";
+        } else {
+          place++;
+          if (r.guesses !== prevScore) rank = place;
+          prevScore = r.guesses;
+          rk.textContent = ["🥇", "🥈", "🥉"][rank - 1] || rank;
+          sc.textContent = r.guesses;
+        }
         const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.name;
-        const sc = document.createElement("span"); sc.className = "sc"; sc.textContent = r.guesses;
         li.append(rk, nm, sc);
         return li;
       });
@@ -126,9 +136,9 @@
 
   // ---------- submitting a score ----------
   let pending = null, submitting = false;
-  async function submit(day, guesses) {
+  async function submit(day, guesses, gaveUp = false) {
     const name = getName();
-    if (!name) { pending = { day, guesses }; return; }
+    if (!name) { pending = { day, guesses, gaveUp }; return; }
     const done = load(SUBMITTED_KEY);
     if (done && done.day === day) return;            // already submitted today
     if (submitting) return;                          // a submit is already in flight
@@ -138,10 +148,10 @@
       const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?on_conflict=day,player_id`, {
         method: "POST",
         headers: { ...headers(), Prefer: "resolution=ignore-duplicates,return=minimal" },
-        body: JSON.stringify({ day, player_id: playerId(), name, guesses }),
+        body: JSON.stringify({ day, player_id: playerId(), name, guesses, gave_up: gaveUp }),
       });
       if (!res.ok) throw new Error("HTTP " + res.status);
-      save(SUBMITTED_KEY, { day, guesses });
+      save(SUBMITTED_KEY, { day, guesses, gaveUp });
       openLeaderboard();
     } catch (e) {
       console.warn("Score submit failed (will retry next visit):", e);
@@ -150,8 +160,9 @@
     }
   }
 
-  // app.js fires this when the daily puzzle is solved (including when reloading an already-solved day)
-  document.addEventListener("hunterdle:solved", e => submit(e.detail.day, e.detail.guesses));
+  // app.js fires these when the daily puzzle ends (also when reloading an already-finished day)
+  document.addEventListener("hunterdle:solved", e => submit(e.detail.day, e.detail.guesses, false));
+  document.addEventListener("hunterdle:gaveup", e => submit(e.detail.day, e.detail.guesses, true));
 
   if (!getName()) askName();
 })();

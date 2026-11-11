@@ -30,3 +30,5 @@
 #lb-status { color: var(--muted, #9bb0a2); text-align: center; padding: 1rem 0; }
 #lb-foot { display: flex; justify-content: space-between; align-items: center; gap: .6rem; font-size: .85rem; color: var(--muted, #9bb0a2); }
 #lb-foot button.link { background: none; border: 0; color: var(--gold, #d8b04a); cursor: pointer; text-decoration: underline; font: inherit; padding: 0; }
+#lb-list li.gaveup { opacity: .75; }
+#lb-list li.gaveup .sc { font-weight: 600; font-size: .8rem; color: var(--muted, #9bb0a2); text-transform: uppercase; letter-spacing: .06em; }

@@ -1,6 +1,11 @@
 // ================= CONFIG =================
 const IMAGE_DIR = "HxH_Wordle_Images/";   // folder with your .webp files
-const MIN_KNOWN_FIELDS = 5;               // answer pool: characters with at least this many known fields (of 8)
+const MIN_KNOWN_FIELDS = 4;               // answer pool: characters with at least this many known fields (of 8)
+
+// Hints: a new hint unlocks every HINT_EVERY guesses. The answer's image is shown blurred;
+// each entry below is the blur (px) for hint 1, 2, 3...  Lower = clearer. Add/remove entries freely.
+const HINT_EVERY = 5;
+const HINT_BLUR = [35, 22, 12, 5];
 
 // Ordered lists used for the up/down arrows
 const AGE_ORDER = ["1-20", "21-40", "41-60", "61-80", "100+"];
@@ -32,7 +37,7 @@ const $ = id => document.getElementById(id);
 const isUnknown = v => v == null || String(v).trim().toLowerCase() === "unknown";
 
 let ALL = [], POOL = [];
-let answer = null, guesses = [], mode = "daily", done = false;
+let answer = null, guesses = [], mode = "daily", done = false, gaveUp = false, hintOpen = false, hintSeen = 0;
 let suggestions = [], selIdx = -1;
 
 // ---------- helpers ----------
@@ -125,6 +130,11 @@ function renderRows(newestIsNew = false) {
   for (let i = guesses.length - 1; i >= 0; i--) {
     rows.appendChild(buildRow(guesses[i], newestIsNew && i === guesses.length - 1));
   }
+  if (gaveUp) {                      // reveal the answer's own row on top
+    const r = buildRow(answer, false);
+    r.classList.add("answer-row");
+    rows.insertBefore(r, rows.firstChild);
+  }
 }
 
 // ---------- autocomplete ----------
@@ -158,38 +168,99 @@ function highlight() {
 // ---------- game flow ----------
 function submitGuess(c) {
   if (done || guesses.some(g => g.name === c.name)) return;
+  const levelBefore = hintLevel();
   guesses.push(c);
+  if (hintLevel() > levelBefore) hintOpen = false;     // a new hint unlocked: the player has to click to see it
   $("input").value = ""; updateSuggestions();
   renderRows(true);
   if (c.name === answer.name) finish(true);
+  if (mode === "daily") saveDaily();
+  updateHint();
+}
+
+// ---------- hints + give up ----------
+function hintLevel() { return Math.min(Math.floor(guesses.length / HINT_EVERY), HINT_BLUR.length); }
+
+function buildTools() {
+  const tools = document.createElement("div");
+  tools.id = "tools";
+  tools.innerHTML = '<button id="hint-btn" type="button"></button><button id="giveup-btn" type="button">Give up</button>';
+  $("search").insertAdjacentElement("afterend", tools);
+
+  const panel = document.createElement("div");
+  panel.id = "hint-panel"; panel.hidden = true;
+  panel.innerHTML = '<div class="hint-img"><img id="hint-img" alt="Blurred hint" draggable="false"></div><p id="hint-note"></p>';
+  tools.insertAdjacentElement("afterend", panel);
+
+  $("hint-btn").onclick = () => { hintOpen = !hintOpen; updateHint(); };
+  $("giveup-btn").onclick = giveUp;
+}
+function updateHint() {
+  const tools = $("tools");
+  if (!tools) return;
+  tools.hidden = done;
+  const panel = $("hint-panel"), btn = $("hint-btn");
+  if (done || !answer) { panel.hidden = true; return; }
+  const lvl = hintLevel(), max = HINT_BLUR.length;
+  const toNext = HINT_EVERY - (guesses.length % HINT_EVERY);
+  const plural = n => (n === 1 ? "guess" : "guesses");
+  if (lvl === 0) {
+    btn.disabled = true; btn.textContent = "Hint in " + toNext + " " + plural(toNext);
+    panel.hidden = true; hintOpen = false;
+    return;
+  }
+  if (hintOpen) hintSeen = lvl;
+  btn.disabled = false;
+  btn.textContent = hintOpen ? "Hide hint" : (lvl > hintSeen ? "Show hint (new)" : "Show hint");
+  panel.hidden = !hintOpen;
+  const img = $("hint-img");
+  const src = imgSrc(answer);
+  if (img.getAttribute("src") !== src) img.src = src;
+  img.style.filter = "blur(" + HINT_BLUR[lvl - 1] + "px)";
+  $("hint-note").textContent = lvl < max
+    ? "Hint " + lvl + " of " + max + " · clearer in " + toNext + " " + plural(toNext)
+    : "Hint " + lvl + " of " + max + " · clearest hint";
+}
+function giveUp() {
+  if (done) return;
+  if (!confirm("Give up and reveal the answer?")) return;
+  gaveUp = true;
+  renderRows(false);
+  finish(false);
   if (mode === "daily") saveDaily();
 }
 function finish(won) {
   done = true;
   $("input").disabled = true;
-  $("input").placeholder = "Solved!";
+  $("input").placeholder = won ? "Solved!" : "Answer revealed";
   const b = $("banner");
   b.hidden = false; b.innerHTML = "";
   b.appendChild(thumb(answer, ""));
   const h = document.createElement("h2"); h.textContent = answer.name; b.appendChild(h);
   const p = document.createElement("p");
-  p.textContent = `Found in ${guesses.length} guess${guesses.length === 1 ? "" : "es"}.`;
-  if (mode === "daily") {
+  const n = guesses.length;
+  p.textContent = won
+    ? `Found in ${n} guess${n === 1 ? "" : "es"}.`
+    : `You gave up after ${n} guess${n === 1 ? "" : "es"}.`;
+  if (mode === "daily" && won) {
     const s = recordStats(won);
     p.textContent += ` Streak: ${s.streak} · Best: ${s.best} · Solved: ${s.wins}`;
   }
   b.appendChild(p);
-  const share = document.createElement("button"); share.textContent = "Copy result";
-  share.onclick = () => copyShare(share);
-  b.appendChild(share);
-  if (mode === "daily" && won) {
-    document.dispatchEvent(new CustomEvent("hunterdle:solved", { detail: { day: todayNumber(), guesses: guesses.length } }));
+  if (won) {
+    const share = document.createElement("button"); share.textContent = "Copy result";
+    share.onclick = () => copyShare(share);
+    b.appendChild(share);
+  }
+  if (mode === "daily") {
+    document.dispatchEvent(new CustomEvent(won ? "hunterdle:solved" : "hunterdle:gaveup", { detail: { day: todayNumber(), guesses: guesses.length } }));
   }
   if (mode === "practice") {
     const again = document.createElement("button"); again.className = "alt"; again.textContent = "Another one";
     again.onclick = () => startGame("practice");
     b.appendChild(again);
   }
+  updateHint();
 }
 function shareText() {
   const label = mode === "daily" ? `Hunterdle #${todayNumber() - LAUNCH_DAY}` : "Hunterdle (practice)";
@@ -214,7 +285,7 @@ function load(key, fallback) {
 }
 function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
 
-function saveDaily() { save("hunterdle-daily", { day: todayNumber(), names: guesses.map(g => g.name) }); }
+function saveDaily() { save("hunterdle-daily", { day: todayNumber(), names: guesses.map(g => g.name), gaveUp }); }
 function recordStats(won) {
   const s = load("hunterdle-stats", { wins: 0, streak: 0, best: 0, lastWinDay: null });
   const today = todayNumber();
@@ -229,7 +300,7 @@ function recordStats(won) {
 
 function startGame(newMode) {
   mode = newMode;
-  guesses = []; done = false;
+  guesses = []; done = false; gaveUp = false; hintOpen = false; hintSeen = 0;
   $("input").disabled = false; $("input").placeholder = "Type a character name…"; $("input").value = "";
   $("banner").hidden = true; $("rows").innerHTML = "";
   $("mode-daily").classList.toggle("active", mode === "daily");
@@ -242,19 +313,23 @@ function startGame(newMode) {
     const saved = load("hunterdle-daily", null);
     if (saved && saved.day === todayNumber()) {
       guesses = saved.names.map(n => ALL.find(c => c.name === n)).filter(Boolean);
+      gaveUp = !!saved.gaveUp;
       renderRows(false);
-      if (guesses.some(g => g.name === answer.name)) finish(true);
+      if (gaveUp) finish(false);
+      else if (guesses.some(g => g.name === answer.name)) finish(true);
     }
   } else {
     answer = POOL[Math.floor(Math.random() * POOL.length)];
     $("subtitle").textContent = "Practice round — random character.";
   }
+  updateHint();
   $("input").focus();
 }
 
 // ---------- init ----------
 async function init() {
   renderHead();
+  buildTools();
   try {
     const res = await fetch("characters.json");
     ALL = await res.json();
