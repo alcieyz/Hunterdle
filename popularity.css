@@ -1,0 +1,43 @@
+#pop-btn.active { background: var(--gold, #d8b04a); color: #1a1405; border-color: var(--gold, #d8b04a); }
+
+/* Popularity tab swaps out the game area */
+#popularity { display: none; max-width: 560px; margin: 1rem auto; }
+main.pop-view > *:not(#popularity) { display: none !important; }
+main.pop-view > #popularity { display: block; }
+
+#popularity h2 { margin: 0 0 .2rem; text-align: center; font: 700 1.6rem "Oswald", sans-serif; letter-spacing: .06em; }
+#popularity .sub { margin: 0 0 .8rem; text-align: center; color: var(--muted, #9bb0a2); font-size: .92rem; }
+#pop-back {
+  display: block; margin: 0 auto .8rem; font: 500 .85rem "Oswald", sans-serif; letter-spacing: .08em; text-transform: uppercase;
+  padding: .4rem .9rem; border-radius: 999px; cursor: pointer; color: var(--fg, #efe9d6);
+  background: transparent; border: 1px solid var(--line, #2a3f33);
+}
+#pop-back:hover { border-color: var(--gold, #d8b04a); }
+#pop-status { text-align: center; color: var(--muted, #9bb0a2); padding: 1rem 0; }
+#pop-list { list-style: none; margin: 0; padding: 0; }
+#pop-list li {
+  display: grid; grid-template-columns: 2.4rem 48px 1fr auto; gap: .7rem; align-items: center;
+  padding: .45rem .6rem; border-bottom: 1px solid var(--line, #2a3f33);
+}
+#pop-list .rank { text-align: center; color: var(--muted, #9bb0a2); font-weight: 600; }
+#pop-list .thumb { width: 48px; height: 48px; }
+#pop-list .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#pop-list .nm small { display: block; color: var(--muted, #9bb0a2); font-size: .75rem; }
+#pop-list .avg { font: 700 1.2rem "Oswald", sans-serif; color: var(--gold, #d8b04a); }
+
+/* Rating box inside the result banner */
+.rate-box { margin: .9rem 0 .2rem; padding-top: .8rem; border-top: 1px solid var(--line, #2a3f33); }
+.rate-box p { margin: 0 0 .5rem !important; }
+.rate-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: .3rem; margin-bottom: .3rem; }
+.rate-btns button {
+  width: 2.2rem; height: 2.2rem; padding: 0 !important; margin: 0 !important; border-radius: 8px !important;
+  background: transparent !important; color: var(--fg, #efe9d6) !important; border: 1px solid var(--line, #2a3f33) !important;
+  font: 600 .95rem "Source Sans 3", sans-serif !important; letter-spacing: 0 !important; text-transform: none !important; cursor: pointer;
+}
+.rate-btns button:hover:not(:disabled) { border-color: var(--gold, #d8b04a) !important; color: var(--gold, #d8b04a) !important; }
+.rate-btns button:disabled { opacity: .5; cursor: default; }
+.rate-box .err { color: #e07a72; }
+.rate-btns button.selected,
+.rate-btns button.selected:hover:not(:disabled) { background: var(--gold, #d8b04a) !important; color: #1a1405 !important; border-color: var(--gold, #d8b04a) !important; }
+.rate-box .rate-submit { margin-top: .4rem; }
+.rate-box .rate-submit:disabled { opacity: .45; cursor: default; }

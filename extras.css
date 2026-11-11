@@ -20,3 +20,9 @@
 #hint-note { margin: 0; color: var(--muted, #9bb0a2); font-size: .85rem; }
 
 .row.answer-row .cell.who span::after { content: " (answer)"; color: var(--gold, #d8b04a); }
+
+/* "Yesterday's character was ..." line under the subtitle */
+#yesterday { margin: -.5rem 0 .9rem; color: var(--muted, #9bb0a2); font-size: .9rem; }
+#yesterday[hidden] { display: none; }
+#yesterday b { color: var(--fg, #efe9d6); }
+#yesterday .thumb { width: 24px; height: 24px; border-radius: 4px; vertical-align: middle; margin-right: .4rem; }

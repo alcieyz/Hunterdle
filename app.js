@@ -178,6 +178,23 @@ function submitGuess(c) {
   updateHint();
 }
 
+// ---------- yesterday's character ----------
+function showYesterday() {
+  let el = $("yesterday");
+  if (!el) {
+    el = document.createElement("p"); el.id = "yesterday";
+    $("subtitle").insertAdjacentElement("afterend", el);
+  }
+  const prev = todayNumber() - 1 - LAUNCH_DAY;       // yesterday's slot in the daily rotation
+  if (prev < 0 || !POOL.length) { el.hidden = true; return; }
+  const order = seededShuffle(POOL, SHUFFLE_SEED);
+  const c = order[prev % order.length];
+  el.hidden = false; el.textContent = "";
+  el.append(thumb(c), "Yesterday's character was ");
+  const b = document.createElement("b"); b.textContent = c.name;
+  el.append(b);
+}
+
 // ---------- hints + give up ----------
 function hintLevel() { return Math.min(Math.floor(guesses.length / HINT_EVERY), HINT_BLUR.length); }
 
@@ -322,6 +339,7 @@ function startGame(newMode) {
     answer = POOL[Math.floor(Math.random() * POOL.length)];
     $("subtitle").textContent = "Practice round — random character.";
   }
+  showYesterday();
   updateHint();
   $("input").focus();
 }

@@ -7,6 +7,7 @@
   // ==========================================
 
   if (!SUPABASE_URL || !SUPABASE_KEY) return;   // leaderboard stays off until configured
+  window.HUNTERDLE_SUPABASE = { url: SUPABASE_URL, key: SUPABASE_KEY };
 
   const $ = id => document.getElementById(id);
   const NAME_KEY = "hunterdle-name", PID_KEY = "hunterdle-pid", SUBMITTED_KEY = "hunterdle-submitted";
