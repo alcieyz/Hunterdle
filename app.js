@@ -5,7 +5,7 @@ const MIN_KNOWN_FIELDS = 4;               // answer pool: characters with at lea
 // Hints: a new hint unlocks every HINT_EVERY guesses. The answer's image is shown blurred;
 // each entry below is the blur (px) for hint 1, 2, 3...  Lower = clearer. Add/remove entries freely.
 const HINT_EVERY = 5;
-const HINT_BLUR = [35, 22, 12, 5];
+const HINT_BLUR = [22, 12, 8, 5];
 
 // Ordered lists used for the up/down arrows
 const AGE_ORDER = ["1-20", "21-40", "41-60", "61-80", "100+"];
